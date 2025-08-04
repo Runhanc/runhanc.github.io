@@ -27,7 +27,7 @@
 <meta property="og:description" content="旋转矩阵（Rotation Matrix）定义是一个用于描述坐标系绕某个轴旋转的正交矩阵，通常为3x3实矩阵，满足：  正交性：$R^TR&#x3D;I$  行列式为1：$det(R)&#x3D;1$   作用用于将三维空间中的向量$\vec{v}$进行旋转： $$\vec{v}_{rotated}&#x3D;R\vec{v}$$ 示例绕z轴旋转角度$\theta$的旋转矩阵为： $$R_z(\t">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-05-08T10:11:53.490Z">
-<meta property="article:modified_time" content="2025-08-04T09:06:09.536Z">
+<meta property="article:modified_time" content="2025-08-04T14:20:09.095Z">
 <meta property="article:author" content="Runhan Zhang">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -285,7 +285,7 @@
 <h2 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h2><p>用于将三维空间中的向量$\vec{v}$进行旋转：</p>
 <p>$$<br>\vec{v}_{rotated}&#x3D;R\vec{v}<br>$$</p>
 <h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>绕z轴旋转角度$\theta$的旋转矩阵为：</p>
-<p>$$<br>R_z(\theta)&#x3D;\begin{bmatrix}<br>cos\theta      &amp; -sin\theta &amp; 0      \<br>sin\theta &amp; cos\theta  &amp; 0 \<br>0      &amp; 0 &amp; 1<br>\end{bmatrix}<br>$$</p>
+<p>$$<br>R_z(\theta)&#x3D;\begin{bmatrix}<br>cos\theta &amp; -sin\theta &amp; 0 \<br>sin\theta &amp; cos\theta  &amp; 0 \<br>0      &amp; 0 &amp; 1 \end{bmatrix}<br>$$</p>
 <h2 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h2><ol>
 <li><p>直观，与线性代数密切相关</p>
 </li>
@@ -348,7 +348,7 @@
 </li>
 </ol>
 <blockquote>
-<p>$$<br>−q\cdot \vec{v} \cdot (-q)^{-1}&#x3D;q\cdot \vec{v} \cdot q^{-1}<br>$$</p>
+<p>$−q\cdot \vec{v} \cdot (-q)^{-1}&#x3D;q\cdot \vec{v} \cdot q^{-1}$</p>
 </blockquote>
 <ul>
 <li>不易人工构造</li>
