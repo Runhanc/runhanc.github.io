@@ -1,0 +1,800 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/image/anya.png">
+  <link rel="icon" href="/image/anya.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Runhan Zhang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="行为克隆 原理 较为直观：  如果人类能完成一个任务，我们就记录下观察到的状态（state）和对应的动作（action），然后训练一个模型去拟合“状态 → 动作”的映射。 训练好的模型就可以在没有人类示范的情况下自主执行相似任务。  数学解释：  机器人任务可表示为一个策略（policy）πθ(a|s)，即在状态 s 下选择动作 a 的概率分布。 专家演示提供了数据集𝒟 &#x3D; {(si, ai)}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Imitation Learning">
+<meta property="og:url" content="https://runhanc.github.io/2025/08/14/IL/index.html">
+<meta property="og:site_name" content="runhanc&#39;s homepage">
+<meta property="og:description" content="行为克隆 原理 较为直观：  如果人类能完成一个任务，我们就记录下观察到的状态（state）和对应的动作（action），然后训练一个模型去拟合“状态 → 动作”的映射。 训练好的模型就可以在没有人类示范的情况下自主执行相似任务。  数学解释：  机器人任务可表示为一个策略（policy）πθ(a|s)，即在状态 s 下选择动作 a 的概率分布。 专家演示提供了数据集𝒟 &#x3D; {(si, ai)}">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-08-14T09:30:05.760Z">
+<meta property="article:modified_time" content="2025-08-14T09:48:24.827Z">
+<meta property="article:author" content="Runhan Zhang">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Imitation Learning - runhanc&#39;s homepage</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"runhanc.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Runhanc</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Imitation Learning"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-08-14 17:30" pubdate>
+          August 14, 2025 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.3k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          20 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Imitation Learning</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="行为克隆">行为克隆</h1>
+<h2 id="原理">原理</h2>
+<p>较为直观：</p>
+<ul>
+<li><p>如果人类能完成一个任务，我们就记录下<strong>观察到的状态（state）和对应的动作（action）</strong>，然后训练一个模型去拟合“状态 → 动作”的映射。</p></li>
+<li><p>训练好的模型就可以在没有人类示范的情况下自主执行相似任务。</p></li>
+</ul>
+<p><strong>数学解释：</strong></p>
+<ol type="1">
+<li><p>机器人任务可表示为一个策略（policy）<span class="math inline"><em>π</em><sub><em>θ</em></sub>(<em>a</em>|<em>s</em>)</span>，即在状态 <span class="math inline"><em>s</em></span> 下选择动作 <span class="math inline"><em>a</em></span> 的概率分布。</p></li>
+<li><p>专家演示提供了数据集<span class="math inline">𝒟 = {(<em>s</em><sub><em>i</em></sub>, <em>a</em><sub><em>i</em></sub>)}<sub><em>i</em> = 1</sub><sup><em>N</em></sup></span>。</p></li>
+<li><p>训练过程是<strong>最小化监督学习损失</strong>：</p>
+<div style="text-align:center;">
+<p><br /><span class="math display"><em>θ</em><sup>*</sup> = arg min<sub><em>θ</em></sub>∑<sub>(<em>s</em><sub><em>i</em></sub>, <em>a</em><sub><em>i</em></sub>) ∈ 𝒟</sub>ℒ(<em>π</em><sub><em>θ</em></sub>(<em>s</em><sub><em>i</em></sub>), <em>a</em><sub><em>i</em></sub>)</span><br /></p>
+</div></li>
+</ol>
+<ul>
+<li><p>对离散动作空间可用<strong>交叉熵损失</strong></p></li>
+<li><p>对连续动作空间可用<strong>均方误差 (MSE)</strong></p></li>
+<li><p>训练完成后，直接用 <span class="math inline"><em>π</em><sub><em>θ</em></sub>(<em>s</em>)</span> 决策即可。</p></li>
+</ul>
+<p><strong>核心本质</strong>：</p>
+<ul>
+<li><p>把机器人决策学习转化为一个<strong>回归/分类问题</strong></p></li>
+<li><p>不依赖环境奖励（与强化学习不同）</p></li>
+<li><p>性能依赖于演示数据的质量与覆盖范围，泛化能力较差，并且无法很好地从错误中恢复</p></li>
+</ul>
+<h1 id="dagger算法">DAgger算法</h1>
+<p>Dagger（Dataset Aggregation，数据集聚合）是一种用于**模仿学习（Imitation Learning）**的算法，常用于机器人和强化学习领域。它的核心思想是：<strong>结合专家演示和智能体自身的探索数据，不断迭代优化策略</strong>，从而克服传统行为克隆（Behavior Cloning）容易出现的“分布偏移”问题。</p>
+<h2 id="dagger-算法流程简述">Dagger 算法流程简述</h2>
+<ol type="1">
+<li><p><strong>初始化</strong>：用专家演示数据训练一个初始策略（通常是行为克隆）。</p></li>
+<li><p><strong>交互采样</strong>：用当前策略与环境交互，收集状态。</p></li>
+<li><p><strong>专家标注</strong>：让专家为这些状态提供正确动作（标签）。</p></li>
+<li><p><strong>数据聚合</strong>：将新采集的（状态，专家动作）对加入训练集。</p></li>
+<li><p><strong>策略更新</strong>：用聚合后的数据集重新训练策略。</p></li>
+<li><p><strong>重复步骤2-5</strong>，直到收敛。</p></li>
+</ol>
+<h2 id="主要优点">主要优点</h2>
+<ul>
+<li><p><strong>缓解分布偏移</strong>：智能体会遇到自己策略下的新状态，专家会为这些新状态提供标签，避免“训练-测试分布不一致”。</p></li>
+<li><p><strong>数据高效</strong>：只需少量专家干预即可获得较好性能。</p></li>
+</ul>
+<h1 id="逆向强化学习">逆向强化学习</h1>
+<p>给定专家演示的最优策略下，反推出其背后的奖励函数</p>
+<h2 id="算法流程">算法流程</h2>
+<ol type="1">
+<li><p><strong>收集专家数据：</strong>收集由专家在执行任务时产生的行为轨迹数据（状态-动作序列）</p></li>
+<li><p><strong>初始化奖励函数：</strong> 算法会从一个初始的奖励函数猜测开始。这个奖励函数通常用一组参数来表示。</p></li>
+<li><p><strong>迭代优化循环：</strong></p></li>
+</ol>
+<ul>
+<li><p><strong>步骤A (RL步骤):</strong> 基于当前的奖励函数，使用标准的强化学习算法（如Q-learning或Policy Gradient）来求解一个最优策略。</p></li>
+<li><p><strong>步骤B (比较与更新):</strong> 比较上一步学到的策略与专家策略的差异。如果两者相似，说明当前的奖励函数可能就是正确的。如果差异很大，则调整奖励函数的参数，使得在该奖励函数下，专家策略的表现优于其他任何策略。</p></li>
+<li><p><strong>循环与收敛：</strong> 重复步骤A和B，直到学到的策略与专家的策略非常接近，此时算法收敛，得到的奖励函数即为最终结果。</p></li>
+</ul>
+<h2 id="相关算法">相关算法</h2>
+<h3 id="apprenticeship-learning-max-margin-irl特征期望匹配">Apprenticeship Learning / Max-Margin IRL（特征期望匹配）</h3>
+<ul>
+<li>假设奖励函数是<strong>状态特征的线性组合</strong>：
+<div style="text-align:center;">
+<p><br /><span class="math display"><em>R</em><sub><em>w</em></sub>(<em>s</em>) = <em>w</em><sup>⊤</sup><em>ϕ</em>(<em>s</em>)</span><br /></p>
+</div></li>
+</ul>
+<p>这里：</p>
+<ul>
+<li><p><span class="math inline"><em>ϕ</em>(<em>s</em>)</span> 是一个 <strong>特征向量</strong>（比如速度、距离目标的远近、能量消耗等）。</p></li>
+<li><p><span class="math inline"><em>w</em></span>是待学习的<strong>权重参数</strong>，表示奖励函数的偏好。</p></li>
+<li><p>我们不能直接从专家演示中看到奖励<span class="math inline"><em>R</em></span>，但是可以统计专家访问到的状态特征的“平均值”（加上折扣因子），即<strong>特征期望</strong>：</p></li>
+</ul>
+<div style="text-align:center;">
+<p><br /><span class="math display"><em>μ</em>(<em>π</em>) = 𝔼<sub><em>π</em></sub>[∑<sub><em>t</em></sub><em>γ</em><sup><em>t</em></sup><em>ϕ</em>(<em>s</em><sub><em>t</em></sub>)]</span><br /></p>
+</div>
+<ul>
+<li>这其实就是<strong>特征访问频率的加权和</strong>。</li>
+</ul>
+<p><strong>因此：</strong></p>
+<ul>
+<li>找到一个<span class="math inline"><em>w</em></span>，让专家的策略$ _E$的回报高于所有其他策略：</li>
+</ul>
+<div style="text-align:center;">
+<p><br /><span class="math display"><em>w</em><sup>⊤</sup><em>μ</em>(<em>π</em><sub><em>E</em></sub>) ≥ <em>w</em><sup>⊤</sup><em>μ</em>(<em>π</em>),  ∀<em>π</em></span><br /></p>
+</div>
+<ul>
+<li>直觉上，就是让<span class="math inline"><em>w</em></span>认为专家比任何策略都“好”，并且<strong>拉大这个差距（Max-Margin）</strong>。</li>
+</ul>
+<p><strong>流程：</strong></p>
+<ol type="1">
+<li><strong>估计专家的特征期望</strong>：</li>
+</ol>
+<div style="text-align:center;">
+<p><br /><span class="math display">$$
+\mu_E \approx \frac{1}{N} \sum_{i=1}^N \sum_{t} \gamma^t \phi(s_t^{(i)})
+$$</span><br /></p>
+</div>
+<ul>
+<li><p><strong>迭代更新</strong>：</p>
+<ul>
+<li><p>给定当前<span class="math inline"><em>w</em></span>，用 RL 求解最优策略<span class="math inline"><em>π</em><sub><em>w</em></sub></span>。</p></li>
+<li><p>得到它的特征期望<span class="math inline"><em>μ</em>(<em>π</em><sub><em>w</em></sub>)</span>。</p></li>
+<li><p>如果 <span class="math inline"><em>μ</em>(<em>π</em><sub><em>w</em></sub>)</span>很接近<span class="math inline"><em>μ</em><sub><em>E</em></sub></span>，就停。</p></li>
+<li><p>否则更新<span class="math inline"><em>w</em></span>，或者把<span class="math inline"><em>μ</em>(<em>π</em><sub><em>w</em></sub>)</span>加到候选策略集合中继续优化。</p></li>
+</ul></li>
+<li><p><strong>停止条件</strong>：</p>
+<ul>
+<li><span class="math inline">∥<em>μ</em>(<em>π</em><sub><em>w</em></sub>) − <em>μ</em><sub><em>E</em></sub>∥ &lt; <em>ϵ</em></span>。</li>
+</ul></li>
+</ul>
+<p><strong>特点：</strong></p>
+<ul>
+<li><p>匹配特征分布 ≈ 让智能体在环境中访问的状态分布和专家相似。</p></li>
+<li><p>这样学到的奖励函数可以泛化到没有见过的状态。</p></li>
+</ul>
+<h2 id="maximum-entropy-irl最大熵-irl">Maximum Entropy IRL（最大熵 IRL）</h2>
+<ul>
+<li><p>在满足“专家最优”的同时，避免对策略做不必要的偏好。</p></li>
+<li><p>传统 IRL 找到的奖励可能有很多个，最大熵原则可以让我们在这些奖励中选择<strong>最均匀、最随机</strong>的轨迹分布（信息量最大）。</p></li>
+</ul>
+<p>假设轨迹（路径）<span class="math inline"><em>ζ</em></span> 的奖励是其状态特征的线性组合：  </p>
+<div style="text-align:center;">
+<p><br /><span class="math display"><em>r</em><em>e</em><em>w</em><em>a</em><em>r</em><em>d</em>(<em>f</em><sub><em>ζ</em></sub>) = <em>θ</em><sup><em>T</em></sup><em>f</em><sub><em>ζ</em></sub> = ∑<sub><em>s</em><sub><em>j</em></sub> ∈ <em>ζ</em></sub><em>θ</em><sup><em>T</em></sup><em>f</em><sub><em>s</em><sub><em>j</em></sub></sub></span><br /></p>
+</div>
+<p>其中：</p>
+<ul>
+<li><p><span class="math inline"><em>f</em><sub><em>s</em><sub><em>j</em></sub></sub></span>是状态 <span class="math inline"><em>s</em><sub><em>j</em></sub></span>的特征向量 </p></li>
+<li><p><span class="math inline"><em>θ</em></span>是模型需要学习的奖励权重 </p></li>
+<li><p><span class="math inline"><em>f</em><sub><em>ζ</em></sub></span>是整条路径的特征计数</p></li>
+</ul>
+<p>目标是使学习者的行为与观察到的专家行为的特征期望相匹配：<span class="math inline">∑<sub><em>P</em><em>a</em><em>t</em><em>h</em><sub><em>ζ</em><sub><em>i</em></sub></sub></sub><em>P</em>(<em>ζ</em><sub><em>i</em></sub>)<em>f</em><sub><em>ζ</em><sub><em>i</em></sub></sub> = <em>f̃</em></span>  </p>
+<p><strong>最大熵原理与路径概率:</strong></p>
+<p>由于存在多种奖励函数和策略可以解释观察到的行为（即“模糊性”），引入<strong>最大熵原理</strong>。该原理选择在满足已知约束（如特征期望匹配）的前提下，熵最大的概率分布，以避免引入不必要的假设。  </p>
+<p>在最大熵原理下，一条路径<span class="math inline"><em>ζ</em><sub><em>i</em></sub></span>的概率被定义为：</p>
+<div style="text-align:center;">
+<p><br /><span class="math display">$$
+P(\zeta_i∣θ)=\frac{1}{Z(θ)}e^{θ^Tf_{\zeta_i}}=\frac{1}{Z(θ)}e^{∑_{s_j\in\zeta_i}{\theta^Tf_{s_j}}}
+$$</span><br /></p>
+</div>
+<p>其中<span class="math inline"><em>Z</em>(<em>θ</em>)</span> 是<strong>配分函数</strong>，一个归一化常数，确保所有可能路径的概率之和为1 。这意味着奖励越高的路径，其被选择的概率呈指数级增长 。  </p>
+<p><strong>学习奖励权重（最大似然估计）:</strong></p>
+<p>为了学习最优的奖励权重<span class="math inline"><em>θ</em></span>，论文采用<strong>最大似然估计</strong>。目标是最大化观察到的专家演示数据在最大熵分布下的似然函数  </p>
+<p>$L(θ):^∗=argmax_{}L()=argmax_{}∑_{examples}logP(∣,T) $</p>
+<p>该函数的梯度计算为经验特征计数与学习者预期特征计数之间的差值 ：  </p>
+<p><span class="math inline">∇<em>L</em>(<em>θ</em>) = <em>f̃</em> − ∑<sub><em>ζ</em></sub><em>P</em>(<em>ζ</em> ∣ <em>θ</em>, <em>T</em>)<em>f</em><sub><em>ζ</em></sub> = <em>f̃</em> − ∑<sub><em>s</em><sub><em>i</em></sub></sub><em>D</em><sub><em>s</em><sub><em>i</em></sub></sub><em>f</em><em>s</em><sub><em>i</em></sub></span></p>
+<p>其中<span class="math inline"><em>D</em><sub><em>s</em><sub><em>i</em></sub></sub></span>是预期状态访问频率。在最大值处，特征期望匹配，从而保证学习者的行为与专家演示行为等效。  </p>
+<p><strong>高效状态频率计算</strong></p>
+<p>计算梯度所需的预期状态访问频率<span class="math inline"><em>D</em><sub><em>s</em><sub><em>i</em></sub></sub></span>是一个计算密集型任务。论文提出了一种高效算法，类似于条件随机场（CRFs）中的<strong>前向-后向算法</strong>，避免了对所有可能路径的显式枚举，从而使该方法能够应用于大型状态空间。  </p>
+<p>该算法通过反向传播（计算配分函数）和前向传播（计算状态访问频率）两个阶段来高效地计算<span class="math inline"><em>D</em><sub><em>s</em><sub><em>i</em></sub></sub></span>。</p>
+<p><strong>特点：</strong></p>
+<ul>
+<li><p>能自然处理次优专家（因为分布是随机的，不会强制唯一最优）。</p></li>
+<li><p>学到的奖励函数在不同策略间不会武断区分。</p></li>
+</ul>
+<h2 id="缺点">缺点</h2>
+<ol type="1">
+<li><p><strong>计算成本高：</strong> IRL的迭代过程中内嵌了一个完整的RL求解过程，这使得其计算复杂度通常远高于标准RL。</p></li>
+<li><p><strong>奖励函数的模糊性：</strong> 对于同一组专家数据，可能存在多个不同的奖励函数都能很好地解释其行为。</p></li>
+<li><p><strong>对专家最优性的假设：</strong> IRL通常假设专家的演示是（近乎）最优的。如果专家演示质量不高或包含错误，学习效果会大打折扣。</p></li>
+<li><p><strong>需要大量高质量数据：</strong> 和许多机器学习方法一样，IRL需要充足且有代表性的专家数据。</p></li>
+</ol>
+<h1 id="gail">GAIL</h1>
+<p>GAIL（Generative Adversarial Imitation Learning，生成对抗模仿学习）把<strong>逆强化学习（IRL）问题转化成了一个生成对抗网络（GAN）的问题，从而直接学策略</strong>而不需要显式地恢复奖励函数。</p>
+<p><strong>核心思想</strong></p>
+<p>GAIL 借鉴了 <strong>GAN</strong> 的结构：</p>
+<ul>
+<li><p><strong>生成器 G</strong> → 在 GAIL 中就是策略 <span class="math inline"><em>π</em><sub><em>θ</em></sub>(<em>a</em>|<em>s</em>)</span>  输入状态<span class="math inline"><em>s</em></span>，输出动作分布，生成轨迹。</p></li>
+<li><p><strong>判别器 D</strong> → 用于判断一对<span class="math inline">(<em>s</em>, <em>a</em>)</span>是来自<strong>专家</strong>还是<strong>策略</strong>。 <span class="math inline"><em>D</em><sub><em>ω</em></sub>(<em>s</em>, <em>a</em>) ∈ (0, 1)</span>，越接近 1 表示越像专家。</p></li>
+<li><p>策略的目标：<strong>愚弄判别器</strong>，让判别器无法区分轨迹来自专家还是自己。</p></li>
+</ul>
+<p><strong>数学公式</strong></p>
+<p>GAIL 的优化目标类似 GAN 的 min-max 博弈：</p>
+<div style="text-align:center;">
+<p><br /><span class="math display">min<sub><em>π</em><sub><em>θ</em></sub></sub>max<sub><em>D</em><sub><em>ω</em></sub></sub>  𝔼<sub>(<em>s</em>, <em>a</em>) ∼ <em>π</em><sub><em>E</em></sub></sub>[log <em>D</em><sub><em>ω</em></sub>(<em>s</em>, <em>a</em>)] + 𝔼<sub>(<em>s</em>, <em>a</em>) ∼ <em>π</em><sub><em>θ</em></sub></sub>[log (1 − <em>D</em><sub><em>ω</em></sub>(<em>s</em>, <em>a</em>))] − <em>λ</em><em>H</em>(<em>π</em><sub><em>θ</em></sub>)</span><br /></p>
+</div>
+<p>解释：</p>
+<ul>
+<li><p>第一项：让判别器对<strong>专家样本</strong>输出高分（接近 1）</p></li>
+<li><p>第二项：让判别器对<strong>生成的轨迹</strong>输出低分（接近 0）</p></li>
+<li><p>第三项：策略熵正则化，鼓励探索</p></li>
+</ul>
+<p>一般写作：<span class="math inline"><em>H</em>(<em>π</em><sub><em>θ</em></sub>) = <em>E</em><sub><em>τ</em> ∼ <em>π</em><sub><em>θ</em></sub></sub>[ − <em>Σ</em><sub><em>t</em></sub><em>l</em><em>o</em><em>g</em><em>π</em><sub><em>θ</em></sub>(<em>a</em><sub><em>t</em></sub> ∣ <em>s</em><sub><em>t</em></sub>)]</span></p>
+<ul>
+<li><span class="math inline"><em>λ</em> &gt; 0</span>：控制熵项权重</li>
+</ul>
+<p><strong>奖励信号的替代</strong>  在训练策略时，GAIL 把判别器输出转换为奖励：</p>
+<p><span class="math inline"><em>r̂</em>(<em>s</em>, <em>a</em>) =  − log (1 − <em>D</em><sub><em>ω</em></sub>(<em>s</em>, <em>a</em>))</span></p>
+<p>这样 RL 就能用这个奖励优化策略。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Imitation Learning</div>
+      <div>https://runhanc.github.io/2025/08/14/IL/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Runhan Zhang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>August 14, 2025</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/08/05/urdf/" title="Introduction of URDF">
+                        <span class="hidden-mobile">Introduction of URDF</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
