@@ -1,0 +1,779 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/image/anya.png">
+  <link rel="icon" href="/image/anya.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Runhan Zhang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="关节式身体运动学的基础理论 运动学链 任何复杂的关节式系统，无论是工业机器人的手臂还是虚拟角色的骨骼，都可以被抽象为一个运动学链（kinematic chain）。这个模型由几个关键组件构成，它们共同定义了系统的结构和运动。  连杆(Links)：是构成运动学链的刚性部件。在理论上，它们被定义为不可变形的物体，主要属性是长度和与其他连杆的连接关系。 关节(Joints)：是连接两个连杆的致动器，它">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Inverse Kinematics">
+<meta property="og:url" content="https://runhanc.github.io/2025/08/22/IK/index.html">
+<meta property="og:site_name" content="runhanc&#39;s homepage">
+<meta property="og:description" content="关节式身体运动学的基础理论 运动学链 任何复杂的关节式系统，无论是工业机器人的手臂还是虚拟角色的骨骼，都可以被抽象为一个运动学链（kinematic chain）。这个模型由几个关键组件构成，它们共同定义了系统的结构和运动。  连杆(Links)：是构成运动学链的刚性部件。在理论上，它们被定义为不可变形的物体，主要属性是长度和与其他连杆的连接关系。 关节(Joints)：是连接两个连杆的致动器，它">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-08-22T08:53:39.873Z">
+<meta property="article:modified_time" content="2025-08-22T09:40:32.851Z">
+<meta property="article:author" content="Runhan Zhang">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Inverse Kinematics - runhanc&#39;s homepage</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"runhanc.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Runhanc</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Inverse Kinematics"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-08-22 16:53" pubdate>
+          August 22, 2025 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.9k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          41 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Inverse Kinematics</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="关节式身体运动学的基础理论">关节式身体运动学的基础理论</h1>
+<h3 id="运动学链">运动学链</h3>
+<p>任何复杂的关节式系统，无论是工业机器人的手臂还是虚拟角色的骨骼，都可以被抽象为一个运动学链（kinematic chain）。这个模型由几个关键组件构成，它们共同定义了系统的结构和运动。</p>
+<ul>
+<li><p>连杆(Links)：是构成运动学链的刚性部件。在理论上，它们被定义为不可变形的物体，主要属性是长度和与其他连杆的连接关系。</p></li>
+<li><p>关节(Joints)：是连接两个连杆的致动器，它允许连杆之间发生相对运动 。关节的类型决定了允许的运动方式。最常见的类型是——</p>
+<ul>
+<li><p><strong>旋转关节（Revolute Joint）：</strong>允许在一个轴上进行旋转（如肘关节）</p></li>
+<li><p><strong>移动关节（Prismatic Joint）：</strong>允许沿一个轴进行平移（如液压缸）</p></li>
+</ul></li>
+<li><p>自由度(Degrees of Freedom, DoF)：一个系统的自由度是指描述其构型所需的独立参数的总数。对于一个简单的运动学链，其总自由度通常等于其所有关节的自由度之和。自由度的数量直接影响了系统的灵活性和控制的复杂性。</p></li>
+<li><p>末端执行器(End-Effector, EE)：是运动学链的末端连杆，通常是与环境直接交互的部分。</p></li>
+<li><p>工作空间(Workspace)：末端执行器可以到达的所有位姿的集合构成了该系统的工作空间 ()。工作空间的形状和大小由运动学链的几何结构（连杆长度）和关节的运动范围共同决定。</p></li>
+</ul>
+<h3 id="正向运动学fk">正向运动学(FK)</h3>
+<p>正向运动学（Forward Kinematics, FK）是一个直接的计算过程：给定一组已知的关节参数（例如，每个关节的旋转角度 <span class="math inline"><em>θ</em></span>），计算出末端执行器在笛卡尔坐标系中的最终位置和姿态。</p>
+<p>在数学上，FK可以表示为一个函数<span class="math inline"><em>x⃗</em> = <em>f</em>(<em>q⃗</em>)</span>，其中<span class="math inline"><em>q⃗</em></span>是包含所有关节参数的向量（构型空间），而<span class="math inline"><em>x⃗</em></span>是描述末端执行器位姿的向量（任务空间）。这个函数是唯一的，意味着对于任何给定的关节构型 <span class="math inline"><em>q⃗</em></span>，都只存在一个确定的末端执行器位姿 <span class="math inline"><em>x⃗</em></span>。</p>
+<p>FK的计算方法通常涉及从运动学链的基座开始，沿着链逐个连杆地应用刚体变换。每个关节的运动（旋转或平移）和每个连杆的几何尺寸都被表示为一个<strong>齐次变换矩阵（Homogeneous Transformation Matrix）</strong>。通过将这些矩阵依次连乘，就可以得到从基座坐标系到末端执行器坐标系的总体变换矩阵，从而直接读出末端执行器的位置和姿态。</p>
+<h4 id="denavit-hartenbergd-h参数"><strong>Denavit-Hartenberg（D-H）参数</strong></h4>
+<p>是一种广泛使用的标准化方法，用于系统地定义这些变换矩阵，简化了复杂机械臂的建模过程。</p>
+<p>即用 4 个参数就能描述任意两个相邻关节坐标系之间的关系：</p>
+<ol type="1">
+<li><p><span class="math inline"><em>a</em><sub><em>i</em></sub></span>（连杆长度，Link Length）</p>
+<ul>
+<li>关节轴<span class="math inline"><em>z</em><sub><em>i</em> − 1</sub></span>到<span class="math inline"><em>z</em><sub><em>i</em></sub></span>的公垂线的长度，即<span class="math inline"><em>x</em><sub><em>i</em></sub></span>轴的长度</li>
+</ul></li>
+<li><p><span class="math inline"><em>α</em><sub><em>i</em></sub></span>（连杆扭角，Link Twist）</p>
+<ul>
+<li><span class="math inline"><em>z</em><sub><em>i</em> − 1</sub></span>和<span class="math inline"><em>z</em><sub><em>i</em></sub></span>之间的夹角（绕<span class="math inline"><em>x</em><sub><em>i</em></sub></span>旋转）</li>
+</ul></li>
+<li><p><span class="math inline"><em>d</em><sub><em>i</em></sub></span>（连杆偏距，Link Offset）</p>
+<ul>
+<li>沿<span class="math inline"><em>z</em><sub><em>i</em> − 1</sub></span>轴的位移关节滑移量，适用于 <strong>Prismatic Joint</strong>）</li>
+</ul></li>
+<li><p><span class="math inline"><em>θ</em><sub><em>i</em></sub></span>（关节角，Joint Angle）</p>
+<ul>
+<li>沿<span class="math inline"><em>z</em><sub><em>i</em> − 1</sub></span>轴的旋转角度（适用于 <strong>Revolute Joint</strong>）</li>
+</ul></li>
+</ol>
+<p><strong>坐标变换矩阵</strong></p>
+<p>通过这 4 个参数，可以写出相邻两坐标系的齐次变换矩阵：</p>
+<mjx-container class="MathJax" jax="SVG" display="true"><svg style="vertical-align: -5.317ex;" xmlns="http://www.w3.org/2000/svg" width="56.175ex" height="11.765ex" role="img" focusable="false" viewBox="0 -2850 24829.2 5200" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-1-TEX-I-1D447" d="M40 437Q21 437 21 445Q21 450 37 501T71 602L88 651Q93 669 101 677H569H659Q691 677 697 676T704 667Q704 661 687 553T668 444Q668 437 649 437Q640 437 637 437T631 442L629 445Q629 451 635 490T641 551Q641 586 628 604T573 629Q568 630 515 631Q469 631 457 630T439 622Q438 621 368 343T298 60Q298 48 386 46Q418 46 427 45T436 36Q436 31 433 22Q429 4 424 1L422 0Q419 0 415 0Q410 0 363 1T228 2Q99 2 64 0H49Q43 6 43 9T45 27Q49 40 55 46H83H94Q174 46 189 55Q190 56 191 56Q196 59 201 76T241 233Q258 301 269 344Q339 619 339 625Q339 630 310 630H279Q212 630 191 624Q146 614 121 583T67 467Q60 445 57 441T43 437H40Z"></path><path id="MJX-1-TEX-I-1D456" d="M184 600Q184 624 203 642T247 661Q265 661 277 649T290 619Q290 596 270 577T226 557Q211 557 198 567T184 600ZM21 287Q21 295 30 318T54 369T98 420T158 442Q197 442 223 419T250 357Q250 340 236 301T196 196T154 83Q149 61 149 51Q149 26 166 26Q175 26 185 29T208 43T235 78T260 137Q263 149 265 151T282 153Q302 153 302 143Q302 135 293 112T268 61T223 11T161 -11Q129 -11 102 10T74 74Q74 91 79 106T122 220Q160 321 166 341T173 380Q173 404 156 404H154Q124 404 99 371T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Z"></path><path id="MJX-1-TEX-N-2212" d="M84 237T84 250T98 270H679Q694 262 694 250T679 230H98Q84 237 84 250Z"></path><path id="MJX-1-TEX-N-31" d="M213 578L200 573Q186 568 160 563T102 556H83V602H102Q149 604 189 617T245 641T273 663Q275 666 285 666Q294 666 302 660V361L303 61Q310 54 315 52T339 48T401 46H427V0H416Q395 3 257 3Q121 3 100 0H88V46H114Q136 46 152 46T177 47T193 50T201 52T207 57T213 61V578Z"></path><path id="MJX-1-TEX-N-3D" d="M56 347Q56 360 70 367H707Q722 359 722 347Q722 336 708 328L390 327H72Q56 332 56 347ZM56 153Q56 168 72 173H708Q722 163 722 153Q722 140 707 133H70Q56 140 56 153Z"></path><path id="MJX-1-TEX-S4-23A1" d="M319 -645V1154H666V1070H403V-645H319Z"></path><path id="MJX-1-TEX-S4-23A3" d="M319 -644V1155H403V-560H666V-644H319Z"></path><path id="MJX-1-TEX-S4-23A2" d="M319 0V602H403V0H319Z"></path><path id="MJX-1-TEX-N-63" d="M370 305T349 305T313 320T297 358Q297 381 312 396Q317 401 317 402T307 404Q281 408 258 408Q209 408 178 376Q131 329 131 219Q131 137 162 90Q203 29 272 29Q313 29 338 55T374 117Q376 125 379 127T395 129H409Q415 123 415 120Q415 116 411 104T395 71T366 33T318 2T249 -11Q163 -11 99 53T34 214Q34 318 99 383T250 448T370 421T404 357Q404 334 387 320Z"></path><path id="MJX-1-TEX-N-6F" d="M28 214Q28 309 93 378T250 448Q340 448 405 380T471 215Q471 120 407 55T250 -10Q153 -10 91 57T28 214ZM250 30Q372 30 372 193V225V250Q372 272 371 288T364 326T348 362T317 390T268 410Q263 411 252 411Q222 411 195 399Q152 377 139 338T126 246V226Q126 130 145 91Q177 30 250 30Z"></path><path id="MJX-1-TEX-N-73" d="M295 316Q295 356 268 385T190 414Q154 414 128 401Q98 382 98 349Q97 344 98 336T114 312T157 287Q175 282 201 278T245 269T277 256Q294 248 310 236T342 195T359 133Q359 71 321 31T198 -10H190Q138 -10 94 26L86 19L77 10Q71 4 65 -1L54 -11H46H42Q39 -11 33 -5V74V132Q33 153 35 157T45 162H54Q66 162 70 158T75 146T82 119T101 77Q136 26 198 26Q295 26 295 104Q295 133 277 151Q257 175 194 187T111 210Q75 227 54 256T33 318Q33 357 50 384T93 424T143 442T187 447H198Q238 447 268 432L283 424L292 431Q302 440 314 448H322H326Q329 448 335 442V310L329 304H301Q295 310 295 316Z"></path><path id="MJX-1-TEX-N-2061" d=""></path><path id="MJX-1-TEX-I-1D703" d="M35 200Q35 302 74 415T180 610T319 704Q320 704 327 704T339 705Q393 701 423 656Q462 596 462 495Q462 380 417 261T302 66T168 -10H161Q125 -10 99 10T60 63T41 130T35 200ZM383 566Q383 668 330 668Q294 668 260 623T204 521T170 421T157 371Q206 370 254 370L351 371Q352 372 359 404T375 484T383 566ZM113 132Q113 26 166 26Q181 26 198 36T239 74T287 161T335 307L340 324H145Q145 321 136 286T120 208T113 132Z"></path><path id="MJX-1-TEX-N-69" d="M69 609Q69 637 87 653T131 669Q154 667 171 652T188 609Q188 579 171 564T129 549Q104 549 87 564T69 609ZM247 0Q232 3 143 3Q132 3 106 3T56 1L34 0H26V46H42Q70 46 91 49Q100 53 102 60T104 102V205V293Q104 345 102 359T88 378Q74 385 41 385H30V408Q30 431 32 431L42 432Q52 433 70 434T106 436Q123 437 142 438T171 441T182 442H185V62Q190 52 197 50T232 46H255V0H247Z"></path><path id="MJX-1-TEX-N-6E" d="M41 46H55Q94 46 102 60V68Q102 77 102 91T102 122T103 161T103 203Q103 234 103 269T102 328V351Q99 370 88 376T43 385H25V408Q25 431 27 431L37 432Q47 433 65 434T102 436Q119 437 138 438T167 441T178 442H181V402Q181 364 182 364T187 369T199 384T218 402T247 421T285 437Q305 442 336 442Q450 438 463 329Q464 322 464 190V104Q464 66 466 59T477 49Q498 46 526 46H542V0H534L510 1Q487 2 460 2T422 3Q319 3 310 0H302V46H318Q379 46 379 62Q380 64 380 200Q379 335 378 343Q372 371 358 385T334 402T308 404Q263 404 229 370Q202 343 195 315T187 232V168V108Q187 78 188 68T191 55T200 49Q221 46 249 46H265V0H257L234 1Q210 2 183 2T145 3Q42 3 33 0H25V46H41Z"></path><path id="MJX-1-TEX-I-1D6FC" d="M34 156Q34 270 120 356T309 442Q379 442 421 402T478 304Q484 275 485 237V208Q534 282 560 374Q564 388 566 390T582 393Q603 393 603 385Q603 376 594 346T558 261T497 161L486 147L487 123Q489 67 495 47T514 26Q528 28 540 37T557 60Q559 67 562 68T577 70Q597 70 597 62Q597 56 591 43Q579 19 556 5T512 -10H505Q438 -10 414 62L411 69L400 61Q390 53 370 41T325 18T267 -2T203 -11Q124 -11 79 39T34 156ZM208 26Q257 26 306 47T379 90L403 112Q401 255 396 290Q382 405 304 405Q235 405 183 332Q156 292 139 224T121 120Q121 71 146 49T208 26Z"></path><path id="MJX-1-TEX-I-1D44E" d="M33 157Q33 258 109 349T280 441Q331 441 370 392Q386 422 416 422Q429 422 439 414T449 394Q449 381 412 234T374 68Q374 43 381 35T402 26Q411 27 422 35Q443 55 463 131Q469 151 473 152Q475 153 483 153H487Q506 153 506 144Q506 138 501 117T481 63T449 13Q436 0 417 -8Q409 -10 393 -10Q359 -10 336 5T306 36L300 51Q299 52 296 50Q294 48 292 46Q233 -10 172 -10Q117 -10 75 30T33 157ZM351 328Q351 334 346 350T323 385T277 405Q242 405 210 374T160 293Q131 214 119 129Q119 126 119 118T118 106Q118 61 136 44T179 26Q217 26 254 59T298 110Q300 114 325 217T351 328Z"></path><path id="MJX-1-TEX-N-30" d="M96 585Q152 666 249 666Q297 666 345 640T423 548Q460 465 460 320Q460 165 417 83Q397 41 362 16T301 -15T250 -22Q224 -22 198 -16T137 16T82 83Q39 165 39 320Q39 494 96 585ZM321 597Q291 629 250 629Q208 629 178 597Q153 571 145 525T137 333Q137 175 145 125T181 46Q209 16 250 16Q290 16 318 46Q347 76 354 130T362 333Q362 478 354 524T321 597Z"></path><path id="MJX-1-TEX-I-1D451" d="M366 683Q367 683 438 688T511 694Q523 694 523 686Q523 679 450 384T375 83T374 68Q374 26 402 26Q411 27 422 35Q443 55 463 131Q469 151 473 152Q475 153 483 153H487H491Q506 153 506 145Q506 140 503 129Q490 79 473 48T445 8T417 -8Q409 -10 393 -10Q359 -10 336 5T306 36L300 51Q299 52 296 50Q294 48 292 46Q233 -10 172 -10Q117 -10 75 30T33 157Q33 205 53 255T101 341Q148 398 195 420T280 442Q336 442 364 400Q369 394 369 396Q370 400 396 505T424 616Q424 629 417 632T378 637H357Q351 643 351 645T353 664Q358 683 366 683ZM352 326Q329 405 277 405Q242 405 210 374T160 293Q131 214 119 129Q119 126 119 118T118 106Q118 61 136 44T179 26Q233 26 290 98L298 109L352 326Z"></path><path id="MJX-1-TEX-S4-23A4" d="M0 1070V1154H347V-645H263V1070H0Z"></path><path id="MJX-1-TEX-S4-23A6" d="M263 -560V1155H347V-644H0V-560H263Z"></path><path id="MJX-1-TEX-S4-23A5" d="M263 0V602H347V0H263Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="msubsup"><g data-mml-node="mi"><use data-c="1D447" xlink:href="#MJX-1-TEX-I-1D447"></use></g><g data-mml-node="TeXAtom" transform="translate(793,413) scale(0.707)" data-mjx-texclass="ORD"><g data-mml-node="mi"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g><g data-mml-node="mo" transform="translate(345,0)"><use data-c="2212" xlink:href="#MJX-1-TEX-N-2212"></use></g><g data-mml-node="mn" transform="translate(1123,0)"><use data-c="31" xlink:href="#MJX-1-TEX-N-31"></use></g></g><g data-mml-node="mi" transform="translate(617,-292.4) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g><g data-mml-node="mo" transform="translate(2268.4,0)"><use data-c="3D" xlink:href="#MJX-1-TEX-N-3D"></use></g><g data-mml-node="mrow" transform="translate(3324.2,0)"><g data-mml-node="mo"><use data-c="23A1" xlink:href="#MJX-1-TEX-S4-23A1" transform="translate(0,1696)"></use><use data-c="23A3" xlink:href="#MJX-1-TEX-S4-23A3" transform="translate(0,-1706)"></use><svg width="667" height="1802" y="-651" x="0" viewBox="0 450.5 667 1802"><use data-c="23A2" xlink:href="#MJX-1-TEX-S4-23A2" transform="scale(1,4.49)"></use></svg></g><g data-mml-node="mtable" transform="translate(667,0)"><g data-mml-node="mtr" transform="translate(0,2100)"><g data-mml-node="mtd"><g data-mml-node="mi"><use data-c="63" xlink:href="#MJX-1-TEX-N-63"></use><use data-c="6F" xlink:href="#MJX-1-TEX-N-6F" transform="translate(444,0)"></use><use data-c="73" xlink:href="#MJX-1-TEX-N-73" transform="translate(944,0)"></use></g><g data-mml-node="mo" transform="translate(1338,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(1504.7,0)"><g data-mml-node="mi"><use data-c="1D703" xlink:href="#MJX-1-TEX-I-1D703"></use></g><g data-mml-node="mi" transform="translate(502,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g><g data-mml-node="mtd" transform="translate(3300.6,0)"><g data-mml-node="mo"><use data-c="2212" xlink:href="#MJX-1-TEX-N-2212"></use></g><g data-mml-node="mi" transform="translate(944.7,0)"><use data-c="73" xlink:href="#MJX-1-TEX-N-73"></use><use data-c="69" xlink:href="#MJX-1-TEX-N-69" transform="translate(394,0)"></use><use data-c="6E" xlink:href="#MJX-1-TEX-N-6E" transform="translate(672,0)"></use></g><g data-mml-node="mo" transform="translate(2172.7,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(2339.3,0)"><g data-mml-node="mi"><use data-c="1D703" xlink:href="#MJX-1-TEX-I-1D703"></use></g><g data-mml-node="mi" transform="translate(502,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g><g data-mml-node="mi" transform="translate(3302,0)"><use data-c="63" xlink:href="#MJX-1-TEX-N-63"></use><use data-c="6F" xlink:href="#MJX-1-TEX-N-6F" transform="translate(444,0)"></use><use data-c="73" xlink:href="#MJX-1-TEX-N-73" transform="translate(944,0)"></use></g><g data-mml-node="mo" transform="translate(4640,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(4806.6,0)"><g data-mml-node="mi"><use data-c="1D6FC" xlink:href="#MJX-1-TEX-I-1D6FC"></use></g><g data-mml-node="mi" transform="translate(673,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g><g data-mml-node="mtd" transform="translate(10601.5,0)"><g data-mml-node="mi"><use data-c="73" xlink:href="#MJX-1-TEX-N-73"></use><use data-c="69" xlink:href="#MJX-1-TEX-N-69" transform="translate(394,0)"></use><use data-c="6E" xlink:href="#MJX-1-TEX-N-6E" transform="translate(672,0)"></use></g><g data-mml-node="mo" transform="translate(1228,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(1394.7,0)"><g data-mml-node="mi"><use data-c="1D703" xlink:href="#MJX-1-TEX-I-1D703"></use></g><g data-mml-node="mi" transform="translate(502,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g><g data-mml-node="mi" transform="translate(2357.3,0)"><use data-c="73" xlink:href="#MJX-1-TEX-N-73"></use><use data-c="69" xlink:href="#MJX-1-TEX-N-69" transform="translate(394,0)"></use><use data-c="6E" xlink:href="#MJX-1-TEX-N-6E" transform="translate(672,0)"></use></g><g data-mml-node="mo" transform="translate(3585.3,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(3752,0)"><g data-mml-node="mi"><use data-c="1D6FC" xlink:href="#MJX-1-TEX-I-1D6FC"></use></g><g data-mml-node="mi" transform="translate(673,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g><g data-mml-node="mtd" transform="translate(16847.8,0)"><g data-mml-node="msub"><g data-mml-node="mi"><use data-c="1D44E" xlink:href="#MJX-1-TEX-I-1D44E"></use></g><g data-mml-node="mi" transform="translate(562,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g><g data-mml-node="mi" transform="translate(1022.6,0)"><use data-c="63" xlink:href="#MJX-1-TEX-N-63"></use><use data-c="6F" xlink:href="#MJX-1-TEX-N-6F" transform="translate(444,0)"></use><use data-c="73" xlink:href="#MJX-1-TEX-N-73" transform="translate(944,0)"></use></g><g data-mml-node="mo" transform="translate(2360.6,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(2527.3,0)"><g data-mml-node="mi"><use data-c="1D703" xlink:href="#MJX-1-TEX-I-1D703"></use></g><g data-mml-node="mi" transform="translate(502,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g></g><g data-mml-node="mtr" transform="translate(0,700)"><g data-mml-node="mtd" transform="translate(55,0)"><g data-mml-node="mi"><use data-c="73" xlink:href="#MJX-1-TEX-N-73"></use><use data-c="69" xlink:href="#MJX-1-TEX-N-69" transform="translate(394,0)"></use><use data-c="6E" xlink:href="#MJX-1-TEX-N-6E" transform="translate(672,0)"></use></g><g data-mml-node="mo" transform="translate(1228,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(1394.7,0)"><g data-mml-node="mi"><use data-c="1D703" xlink:href="#MJX-1-TEX-I-1D703"></use></g><g data-mml-node="mi" transform="translate(502,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g><g data-mml-node="mtd" transform="translate(3718,0)"><g data-mml-node="mi"><use data-c="63" xlink:href="#MJX-1-TEX-N-63"></use><use data-c="6F" xlink:href="#MJX-1-TEX-N-6F" transform="translate(444,0)"></use><use data-c="73" xlink:href="#MJX-1-TEX-N-73" transform="translate(944,0)"></use></g><g data-mml-node="mo" transform="translate(1338,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(1504.7,0)"><g data-mml-node="mi"><use data-c="1D703" xlink:href="#MJX-1-TEX-I-1D703"></use></g><g data-mml-node="mi" transform="translate(502,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g><g data-mml-node="mi" transform="translate(2467.3,0)"><use data-c="63" xlink:href="#MJX-1-TEX-N-63"></use><use data-c="6F" xlink:href="#MJX-1-TEX-N-6F" transform="translate(444,0)"></use><use data-c="73" xlink:href="#MJX-1-TEX-N-73" transform="translate(944,0)"></use></g><g data-mml-node="mo" transform="translate(3805.3,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(3972,0)"><g data-mml-node="mi"><use data-c="1D6FC" xlink:href="#MJX-1-TEX-I-1D6FC"></use></g><g data-mml-node="mi" transform="translate(673,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g><g data-mml-node="mtd" transform="translate(10074.2,0)"><g data-mml-node="mo"><use data-c="2212" xlink:href="#MJX-1-TEX-N-2212"></use></g><g data-mml-node="mi" transform="translate(944.7,0)"><use data-c="63" xlink:href="#MJX-1-TEX-N-63"></use><use data-c="6F" xlink:href="#MJX-1-TEX-N-6F" transform="translate(444,0)"></use><use data-c="73" xlink:href="#MJX-1-TEX-N-73" transform="translate(944,0)"></use></g><g data-mml-node="mo" transform="translate(2282.7,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(2449.3,0)"><g data-mml-node="mi"><use data-c="1D703" xlink:href="#MJX-1-TEX-I-1D703"></use></g><g data-mml-node="mi" transform="translate(502,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g><g data-mml-node="mi" transform="translate(3412,0)"><use data-c="73" xlink:href="#MJX-1-TEX-N-73"></use><use data-c="69" xlink:href="#MJX-1-TEX-N-69" transform="translate(394,0)"></use><use data-c="6E" xlink:href="#MJX-1-TEX-N-6E" transform="translate(672,0)"></use></g><g data-mml-node="mo" transform="translate(4640,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(4806.6,0)"><g data-mml-node="mi"><use data-c="1D6FC" xlink:href="#MJX-1-TEX-I-1D6FC"></use></g><g data-mml-node="mi" transform="translate(673,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g><g data-mml-node="mtd" transform="translate(16902.8,0)"><g data-mml-node="msub"><g data-mml-node="mi"><use data-c="1D44E" xlink:href="#MJX-1-TEX-I-1D44E"></use></g><g data-mml-node="mi" transform="translate(562,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g><g data-mml-node="mi" transform="translate(1022.6,0)"><use data-c="73" xlink:href="#MJX-1-TEX-N-73"></use><use data-c="69" xlink:href="#MJX-1-TEX-N-69" transform="translate(394,0)"></use><use data-c="6E" xlink:href="#MJX-1-TEX-N-6E" transform="translate(672,0)"></use></g><g data-mml-node="mo" transform="translate(2250.6,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(2417.3,0)"><g data-mml-node="mi"><use data-c="1D703" xlink:href="#MJX-1-TEX-I-1D703"></use></g><g data-mml-node="mi" transform="translate(502,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g></g><g data-mml-node="mtr" transform="translate(0,-700)"><g data-mml-node="mtd" transform="translate(900.3,0)"><g data-mml-node="mn"><use data-c="30" xlink:href="#MJX-1-TEX-N-30"></use></g></g><g data-mml-node="mtd" transform="translate(5006.6,0)"><g data-mml-node="mi"><use data-c="73" xlink:href="#MJX-1-TEX-N-73"></use><use data-c="69" xlink:href="#MJX-1-TEX-N-69" transform="translate(394,0)"></use><use data-c="6E" xlink:href="#MJX-1-TEX-N-6E" transform="translate(672,0)"></use></g><g data-mml-node="mo" transform="translate(1228,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(1394.7,0)"><g data-mml-node="mi"><use data-c="1D6FC" xlink:href="#MJX-1-TEX-I-1D6FC"></use></g><g data-mml-node="mi" transform="translate(673,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g><g data-mml-node="mtd" transform="translate(11725.2,0)"><g data-mml-node="mi"><use data-c="63" xlink:href="#MJX-1-TEX-N-63"></use><use data-c="6F" xlink:href="#MJX-1-TEX-N-6F" transform="translate(444,0)"></use><use data-c="73" xlink:href="#MJX-1-TEX-N-73" transform="translate(944,0)"></use></g><g data-mml-node="mo" transform="translate(1338,0)"><use data-c="2061" xlink:href="#MJX-1-TEX-N-2061"></use></g><g data-mml-node="msub" transform="translate(1504.7,0)"><g data-mml-node="mi"><use data-c="1D6FC" xlink:href="#MJX-1-TEX-I-1D6FC"></use></g><g data-mml-node="mi" transform="translate(673,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g><g data-mml-node="mtd" transform="translate(18085.9,0)"><g data-mml-node="msub"><g data-mml-node="mi"><use data-c="1D451" xlink:href="#MJX-1-TEX-I-1D451"></use></g><g data-mml-node="mi" transform="translate(553,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g></g><g data-mml-node="mtr" transform="translate(0,-2100)"><g data-mml-node="mtd" transform="translate(900.3,0)"><g data-mml-node="mn"><use data-c="30" xlink:href="#MJX-1-TEX-N-30"></use></g></g><g data-mml-node="mtd" transform="translate(5937.4,0)"><g data-mml-node="mn"><use data-c="30" xlink:href="#MJX-1-TEX-N-30"></use></g></g><g data-mml-node="mtd" transform="translate(12711,0)"><g data-mml-node="mn"><use data-c="30" xlink:href="#MJX-1-TEX-N-30"></use></g></g><g data-mml-node="mtd" transform="translate(18259.4,0)"><g data-mml-node="mn"><use data-c="31" xlink:href="#MJX-1-TEX-N-31"></use></g></g></g></g><g data-mml-node="mo" transform="translate(20838,0)"><use data-c="23A4" xlink:href="#MJX-1-TEX-S4-23A4" transform="translate(0,1696)"></use><use data-c="23A6" xlink:href="#MJX-1-TEX-S4-23A6" transform="translate(0,-1706)"></use><svg width="667" height="1802" y="-651" x="0" viewBox="0 450.5 667 1802"><use data-c="23A5" xlink:href="#MJX-1-TEX-S4-23A5" transform="scale(1,4.49)"></use></svg></g></g></g></g></svg></mjx-container>
+<p>这样，机器人从基座到末端的总变换就是：</p>
+<div style="text-align:center;">
+<p><br /><span class="math display"><em>T</em><sub>0</sub><sup><em>n</em></sup> = <em>T</em><sub>0</sub><sup>1</sup><em>T</em><sub>1</sub><sup>2</sup>⋯<em>T</em><sub><em>n</em> − 1</sub><sup><em>n</em></sup></span><br /></p>
+</div>
+<p><strong>D-H建模流程</strong></p>
+<ol type="1">
+<li><p>确定每个关节的 <strong>z 轴</strong>（旋转轴或移动轴）。</p></li>
+<li><p>建立相邻连杆的坐标系（按照 D-H 规则，x 轴是相邻两个关节的 z 轴的公垂线）。</p></li>
+<li><p>读出每个关节的 4 个 D-H 参数（<span class="math inline"><em>a</em><sub><em>i</em></sub>, <em>α</em><sub><em>i</em></sub>, <em>d</em><sub><em>i</em></sub>, <em>θ</em><sub><em>i</em></sub></span>）。</p></li>
+<li><p>写出齐次变换矩阵。</p></li>
+<li><p>连接所有变换，得到末端位姿。</p></li>
+</ol>
+<h1 id="逆运动学ik">逆运动学（IK）</h1>
+<p>逆运动学（Inverse Kinematics, IK）是与FK完全相反的过程。它的任务是：给定一个期望的末端执行器目标位姿<span class="math inline"><em>x⃗</em></span>，计算出需要哪些关节参数<span class="math inline"><em>q⃗</em></span>才能使末端执行器达到该目标。</p>
+<p>数学上，IK问题是求解方程 <span class="math inline"><em>x⃗</em><sub><em>D</em></sub> = <em>f</em>(<em>q⃗</em>)</span> 中的未知变量 <span class="math inline"><em>q⃗</em></span>。这本质上是在求正向运动学函数 <span class="math inline"><em>f</em></span> 的逆，即 <span class="math inline"><em>q⃗</em> = <em>f</em><sup> − 1</sup>(<em>x⃗</em><sub><em>D</em></sub>)</span>。</p>
+<h2 id="问题说明">问题说明</h2>
+<h3 id="非线性映射">非线性映射</h3>
+<p>IK求解的根本困难在于函数 <span class="math inline"><em>f</em>(<em>q⃗</em>)</span> 是一个<strong>高度非线性</strong>的函数。这种非线性主要源于旋转关节中普遍存在的三角函数关系（如正弦和余弦）。当一个关节旋转时，其下游所有连杆的位置都会以一种非线性的方式改变。</p>
+<p>这种非线性映射会带来以下几个后果：</p>
+<ol type="1">
+<li><p><strong>几何失真</strong>：关节空间中的直线路径（即所有关节以恒定速度变化）在任务空间中会映射成复杂的曲线路径。反之亦然，任务空间中的直线路径（如末端执行器沿直线移动）对应于关节空间中一条复杂的曲线路径。这意味着我们无法通过简单的线性插值来规划关节运动以实现直线运动。</p></li>
+<li><p><strong>数学复杂性</strong>：由于其非线性，函数 <br /><span class="math display"><em>f</em></span><br /> 通常没有一个简单的、全局的逆函数 <span class="math inline"><em>f</em><sup> − 1</sup></span>。标准的线性代数工具（如矩阵求逆）无法直接用于求解 <span class="math inline"><em>q⃗</em> = <em>f</em><sup> − 1</sup>(<em>x⃗</em><sub><em>D</em></sub>)</span>。必须采用更复杂的几何或数值方法来近似或求解这个问题。</p></li>
+<li><p><strong>解的结构</strong>：线性方程组的解通常是唯一的点或线性子空间，而IK这种非线性方程组的解集可以是多个离散的点，甚至是复杂的非线性流形。</p></li>
+</ol>
+<h3 id="解空间">解空间</h3>
+<p>通常存在以下三种情况：</p>
+<ol type="1">
+<li><p><strong>无解</strong>：当期望的目标位姿 <span class="math inline"><em>x⃗</em><sub><em>D</em></sub></span>位于机器人的工作空间之外时，IK问题无解。这种情况被称为<strong>不可达性（Unreachability）</strong>。此外，当任务约束的数量（m）超过系统的自由度（n），即 <span class="math inline"><em>n</em> &lt; <em>m</em></span> 时，系统是<strong>过约束</strong>的，通常也无解。</p></li>
+<li><p><strong>有限数量的多解</strong>：对于一个<strong>非冗余</strong>的机械臂，即其自由度数量 n 等于任务空间维度 m（例如，一个6自由度机械臂在三维空间中控制6维位姿），IK问题通常有有限个离散的解。一个经典的例子是2连杆平面机械臂，对于工作空间内的大多数点，都存在两种构型可以到达：“肘关节向上（elbow-up）”和“肘关节向下（elbow-down）”。</p></li>
+<li><p><strong>无限数量的解</strong>：当一个系统的自由度 n 大于其任务空间的维度 m 时，该系统被称为<strong>冗余机械臂（Redundant Manipulator）</strong>。例如，一个7自由度的人臂在执行只需6维位姿的抓取任务时就是冗余的。对于冗余系统，如果一个解存在，那么通常存在一个连续的、无限的解集。这些解构成一个 <span class="math inline">(<em>n</em> − <em>m</em>)</span> 维的流形，被称为<strong>自运动流形（Self-motion Manifold）</strong>。</p></li>
+</ol>
+<p>冗余性最初被视为一个数学上的难题，它使得寻找一个“唯一”的解变得不可能。然而，在现代机器人学中，这种冗余性被巧妙地转化为一个强大的特性。无限的解空间为系统提供了额外的灵活性，允许其在完成主要任务（即末端执行器到达目标位姿）的同时，优化一些次级目标。IK算法可以利用这种冗余性，从无限的解中选择一个“最优”的解。这个最优解可以满足诸如<strong>避开关节极限</strong>、<strong>避免自碰撞</strong>、<strong>最小化能量消耗</strong>、<strong>保持身体平衡</strong>等物理约束。在运动重定向的应用中，这种冗余性尤为关键，它允许系统在匹配末端执行器轨迹的同时，尽可能地模仿源动作的“风格”或保持自然的姿态。</p>
+<h3 id="运动学奇异点">运动学奇异点</h3>
+<p><strong>奇异点（Singularities）</strong>指机械臂处于某些特定的关节构型时，其末端执行器会暂时失去在一个或多个方向上运动的能力。一个直观的例子是当一个机械臂完全伸直时，它无法再向外伸展，此时它在这个方向上失去了一个自由度。另一个例子是当一个拥有球形手腕的机械臂的两个关节轴线重合时，会发生所谓的“万向节死锁（gimbal lock）”。</p>
+<p>从数学角度看，奇异点发生在<strong>雅可比矩阵（Jacobian Matrix）</strong>的秩下降时。雅可比矩阵描述了关节速度与末端执行器速度之间的线性关系，在奇异点处，该矩阵变为奇异（即不可逆）。</p>
+<p>奇异点对IK求解，特别是基于数值迭代的求解器，会带来灾难性的后果：</p>
+<ul>
+<li><p><strong>速度无限大</strong>：在奇异点附近，即使末端执行器只需要一个微小的移动，也可能要求某些关节以极高甚至无限大的速度运动。这在物理上是不可能实现的，并且会导致控制系统不稳定。</p></li>
+<li><p><strong>力/力矩失控</strong>：根据静力学对偶原理，在奇异点处，机械臂在某些方向上无法施加力，而在另一些方向上，微小的外部力就可能导致关节产生巨大的力矩，可能损坏电机或齿轮箱。</p></li>
+<li><p><strong>算法失效</strong>：许多依赖于雅可比矩阵求逆的数值IK算法在奇异点处会因除零错误而失败，或产生剧烈的振荡和不稳定的行为。</p></li>
+</ul>
+<p>因此，识别、避免或平稳地穿越奇异点是设计任何鲁棒IK求解器时都必须面对的核心挑战。</p>
+<h2 id="逆运动学的解析封闭形式解">逆运动学的解析（封闭形式）解</h2>
+<p>解析解，又称封闭形式解（Closed-form Solution），是指能够将关节变量表示为末端执行器位姿和机械臂几何参数的显式数学表达式的解。当解析解存在时，它通常是最高效、最可靠的求解方式。</p>
+<h3 id="几何法">几何法</h3>
+<p>是一种非常直观的解析求解策略。其核心思想是利用机械臂的几何结构，将其分解为一系列简单的平面几何问题，然后利用三角学知识（如余弦定理、正弦定理）直接求解关节角度。</p>
+<p>该方法通常从末端执行器开始，向基座方向反向推理。通过构建由连杆和目标位置构成的三角形，可以直接计算出相关的关节角度。几何法的优点在于其过程清晰易懂，能够直观地揭示多解的存在性，例如，通过观察三角形的两种可能构型来理解“肘关节向上/向下”的解。然而，随着关节数量的增加，几何关系变得异常复杂，使得这种方法难以应用于高自由度的机械臂。</p>
+<h3 id="代数法">代数法</h3>
+<p>基本流程如下：</p>
+<ol type="1">
+<li><p>建立机械臂的正向运动学方程，通常表示为一个从基座到末端执行器的齐次变换矩阵 <span class="math inline"><em>T</em>(<em>q⃗</em>)</span>。这个矩阵的元素是关节变量 <span class="math inline"><em>q⃗</em></span> 的复杂三角函数。</p></li>
+<li><p>将这个矩阵与描述期望目标位姿的齐次变换矩阵 <span class="math inline"><em>H</em></span> 相等，即 <span class="math inline"><em>T</em>(<em>q⃗</em>) = <em>H</em></span>。</p></li>
+<li><p>通过逐个对比矩阵中对应元素，可以得到一组包含未知关节变量的非线性方程组。</p></li>
+<li><p>通过一系列巧妙的代数变换和消元，逐步求解出每个关节变量。</p></li>
+</ol>
+<h3 id="特点">特点</h3>
+<h4 id="优势">优势</h4>
+<ol type="1">
+<li><p><strong>计算速度快</strong></p></li>
+<li><p><strong>完备性与准确性</strong>：解析解能够给出所有可能的解，并且解的精度只受限于计算机的浮点精度。</p></li>
+<li><p><strong>可靠性</strong>：不存在迭代法中的收敛问题或奇异点导致的数值不稳定问题。</p></li>
+</ol>
+<h4 id="劣势">劣势</h4>
+<ol type="1">
+<li><p><strong>推导难度</strong>：对于超过6个自由度的通用机械臂，推导解析解在数学上变得极其困难。</p></li>
+<li><p><strong>缺乏通用性</strong>：解析解是针对特定运动学结构推导的。一旦机械臂的几何参数（如连杆长度、关节类型）发生改变，就需要重新推导全新的解，缺乏通用性和可扩展性。</p></li>
+<li><p><strong>对冗余系统不适用</strong>：对于冗余机械臂，存在无限解，无法用一个简单的封闭表达式来描述所有解。</p></li>
+</ol>
+<h2 id="复杂系统的数值与优化解">复杂系统的数值与优化解</h2>
+<p>数值法，即通过迭代逼近的方式来寻找IK问题的解。与寻求精确封闭表达式的解析法不同，数值法将IK问题转化为一个可以通过迭代计算逐步求解的数学问题。</p>
+<h3 id="基于雅可比矩阵的方法微分运动学">基于雅可比矩阵的方法：微分运动学</h3>
+<p>核心是利用微分关系来线性化IK问题。不直接求解关节角度 <span class="math inline"><em>q⃗</em></span>，而是求解关节角度的微小变化量 <span class="math inline"><em>Δ</em><em>θ⃗</em></span>，然后通过累加这些变化量来逐步逼近目标。</p>
+<h4 id="雅可比矩阵j">雅可比矩阵（J）</h4>
+<p><strong>雅可比矩阵</strong>是连接关节空间速度 <mjx-container class="MathJax" jax="SVG" display="true"><svg style="vertical-align: -0.439ex;" xmlns="http://www.w3.org/2000/svg" width="1.041ex" height="2.848ex" role="img" focusable="false" viewBox="0 -1065 460 1259" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-1-TEX-I-1D45E" d="M33 157Q33 258 109 349T280 441Q340 441 372 389Q373 390 377 395T388 406T404 418Q438 442 450 442Q454 442 457 439T460 434Q460 425 391 149Q320 -135 320 -139Q320 -147 365 -148H390Q396 -156 396 -157T393 -175Q389 -188 383 -194H370Q339 -192 262 -192Q234 -192 211 -192T174 -192T157 -193Q143 -193 143 -185Q143 -182 145 -170Q149 -154 152 -151T172 -148Q220 -148 230 -141Q238 -136 258 -53T279 32Q279 33 272 29Q224 -10 172 -10Q117 -10 75 30T33 157ZM352 326Q329 405 277 405Q242 405 210 374T160 293Q131 214 119 129Q119 126 119 118T118 106Q118 61 136 44T179 26Q233 26 290 98L298 109L352 326Z"></path><path id="MJX-1-TEX-N-20D7" d="M377 694Q377 702 382 708T397 714Q404 714 409 709Q414 705 419 690Q429 653 460 633Q471 626 471 615Q471 606 468 603T454 594Q411 572 379 531Q377 529 374 525T369 519T364 517T357 516Q350 516 344 521T337 536Q337 555 384 595H213L42 596Q29 605 29 615Q29 622 42 635H401Q377 673 377 694Z"></path><path id="MJX-1-TEX-N-2D9" d="M190 609Q190 637 208 653T252 669Q275 667 292 652T309 609Q309 579 292 564T250 549Q225 549 208 564T190 609Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="TeXAtom" data-mjx-texclass="ORD"><g data-mml-node="mover"><g data-mml-node="TeXAtom" data-mjx-texclass="ORD"><g data-mml-node="mover"><g data-mml-node="mi"><use data-c="1D45E" xlink:href="#MJX-1-TEX-I-1D45E"></use></g><g data-mml-node="mo" transform="translate(316.8,31) translate(-250 0)"><use data-c="20D7" xlink:href="#MJX-1-TEX-N-20D7"></use></g></g></g><g data-mml-node="mo" transform="translate(316.8,296) translate(-250 0)"><use data-c="2D9" xlink:href="#MJX-1-TEX-N-2D9"></use></g></g></g></g></g></svg></mjx-container> 和任务空间（末端执行器）速度 <mjx-container class="MathJax" jax="SVG" display="true"><svg style="vertical-align: -0.025ex;" xmlns="http://www.w3.org/2000/svg" width="1.294ex" height="2.434ex" role="img" focusable="false" viewBox="0 -1065 572 1076" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-1-TEX-I-1D465" d="M52 289Q59 331 106 386T222 442Q257 442 286 424T329 379Q371 442 430 442Q467 442 494 420T522 361Q522 332 508 314T481 292T458 288Q439 288 427 299T415 328Q415 374 465 391Q454 404 425 404Q412 404 406 402Q368 386 350 336Q290 115 290 78Q290 50 306 38T341 26Q378 26 414 59T463 140Q466 150 469 151T485 153H489Q504 153 504 145Q504 144 502 134Q486 77 440 33T333 -11Q263 -11 227 52Q186 -10 133 -10H127Q78 -10 57 16T35 71Q35 103 54 123T99 143Q142 143 142 101Q142 81 130 66T107 46T94 41L91 40Q91 39 97 36T113 29T132 26Q168 26 194 71Q203 87 217 139T245 247T261 313Q266 340 266 352Q266 380 251 392T217 404Q177 404 142 372T93 290Q91 281 88 280T72 278H58Q52 284 52 289Z"></path><path id="MJX-1-TEX-N-20D7" d="M377 694Q377 702 382 708T397 714Q404 714 409 709Q414 705 419 690Q429 653 460 633Q471 626 471 615Q471 606 468 603T454 594Q411 572 379 531Q377 529 374 525T369 519T364 517T357 516Q350 516 344 521T337 536Q337 555 384 595H213L42 596Q29 605 29 615Q29 622 42 635H401Q377 673 377 694Z"></path><path id="MJX-1-TEX-N-2D9" d="M190 609Q190 637 208 653T252 669Q275 667 292 652T309 609Q309 579 292 564T250 549Q225 549 208 564T190 609Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="TeXAtom" data-mjx-texclass="ORD"><g data-mml-node="mover"><g data-mml-node="TeXAtom" data-mjx-texclass="ORD"><g data-mml-node="mover"><g data-mml-node="mi"><use data-c="1D465" xlink:href="#MJX-1-TEX-I-1D465"></use></g><g data-mml-node="mo" transform="translate(313.8,31) translate(-250 0)"><use data-c="20D7" xlink:href="#MJX-1-TEX-N-20D7"></use></g></g></g><g data-mml-node="mo" transform="translate(313.8,296) translate(-250 0)"><use data-c="2D9" xlink:href="#MJX-1-TEX-N-2D9"></use></g></g></g></g></g></svg></mjx-container> 的桥梁。它是一个由偏导数构成的矩阵，其线性关系表示为：</p>
+<div style="text-align:center;">
+<p><br /><span class="math display"><em>ẋ</em> = <em>J</em>(<em>q</em>)<em>q̇</em></span><br /></p>
+</div>
+<p>其中<mjx-container class="MathJax" jax="SVG" display="true"><svg style="vertical-align: -2.218ex;" xmlns="http://www.w3.org/2000/svg" width="9.981ex" height="5.365ex" role="img" focusable="false" viewBox="0 -1391 4411.8 2371.2" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-1-TEX-I-1D43D" d="M447 625Q447 637 354 637H329Q323 642 323 645T325 664Q329 677 335 683H352Q393 681 498 681Q541 681 568 681T605 682T619 682Q633 682 633 672Q633 670 630 658Q626 642 623 640T604 637Q552 637 545 623Q541 610 483 376Q420 128 419 127Q397 64 333 21T195 -22Q137 -22 97 8T57 88Q57 130 80 152T132 174Q177 174 182 130Q182 98 164 80T123 56Q115 54 115 53T122 44Q148 15 197 15Q235 15 271 47T324 130Q328 142 387 380T447 625Z"></path><path id="MJX-1-TEX-I-1D456" d="M184 600Q184 624 203 642T247 661Q265 661 277 649T290 619Q290 596 270 577T226 557Q211 557 198 567T184 600ZM21 287Q21 295 30 318T54 369T98 420T158 442Q197 442 223 419T250 357Q250 340 236 301T196 196T154 83Q149 61 149 51Q149 26 166 26Q175 26 185 29T208 43T235 78T260 137Q263 149 265 151T282 153Q302 153 302 143Q302 135 293 112T268 61T223 11T161 -11Q129 -11 102 10T74 74Q74 91 79 106T122 220Q160 321 166 341T173 380Q173 404 156 404H154Q124 404 99 371T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Z"></path><path id="MJX-1-TEX-I-1D457" d="M297 596Q297 627 318 644T361 661Q378 661 389 651T403 623Q403 595 384 576T340 557Q322 557 310 567T297 596ZM288 376Q288 405 262 405Q240 405 220 393T185 362T161 325T144 293L137 279Q135 278 121 278H107Q101 284 101 286T105 299Q126 348 164 391T252 441Q253 441 260 441T272 442Q296 441 316 432Q341 418 354 401T367 348V332L318 133Q267 -67 264 -75Q246 -125 194 -164T75 -204Q25 -204 7 -183T-12 -137Q-12 -110 7 -91T53 -71Q70 -71 82 -81T95 -112Q95 -148 63 -167Q69 -168 77 -168Q111 -168 139 -140T182 -74L193 -32Q204 11 219 72T251 197T278 308T289 365Q289 372 288 376Z"></path><path id="MJX-1-TEX-N-3D" d="M56 347Q56 360 70 367H707Q722 359 722 347Q722 336 708 328L390 327H72Q56 332 56 347ZM56 153Q56 168 72 173H708Q722 163 722 153Q722 140 707 133H70Q56 140 56 153Z"></path><path id="MJX-1-TEX-I-1D715" d="M202 508Q179 508 169 520T158 547Q158 557 164 577T185 624T230 675T301 710L333 715H345Q378 715 384 714Q447 703 489 661T549 568T566 457Q566 362 519 240T402 53Q321 -22 223 -22Q123 -22 73 56Q42 102 42 148V159Q42 276 129 370T322 465Q383 465 414 434T455 367L458 378Q478 461 478 515Q478 603 437 639T344 676Q266 676 223 612Q264 606 264 572Q264 547 246 528T202 508ZM430 306Q430 372 401 400T333 428Q270 428 222 382Q197 354 183 323T150 221Q132 149 132 116Q132 21 232 21Q244 21 250 22Q327 35 374 112Q389 137 409 196T430 306Z"></path><path id="MJX-1-TEX-I-1D465" d="M52 289Q59 331 106 386T222 442Q257 442 286 424T329 379Q371 442 430 442Q467 442 494 420T522 361Q522 332 508 314T481 292T458 288Q439 288 427 299T415 328Q415 374 465 391Q454 404 425 404Q412 404 406 402Q368 386 350 336Q290 115 290 78Q290 50 306 38T341 26Q378 26 414 59T463 140Q466 150 469 151T485 153H489Q504 153 504 145Q504 144 502 134Q486 77 440 33T333 -11Q263 -11 227 52Q186 -10 133 -10H127Q78 -10 57 16T35 71Q35 103 54 123T99 143Q142 143 142 101Q142 81 130 66T107 46T94 41L91 40Q91 39 97 36T113 29T132 26Q168 26 194 71Q203 87 217 139T245 247T261 313Q266 340 266 352Q266 380 251 392T217 404Q177 404 142 372T93 290Q91 281 88 280T72 278H58Q52 284 52 289Z"></path><path id="MJX-1-TEX-I-1D45E" d="M33 157Q33 258 109 349T280 441Q340 441 372 389Q373 390 377 395T388 406T404 418Q438 442 450 442Q454 442 457 439T460 434Q460 425 391 149Q320 -135 320 -139Q320 -147 365 -148H390Q396 -156 396 -157T393 -175Q389 -188 383 -194H370Q339 -192 262 -192Q234 -192 211 -192T174 -192T157 -193Q143 -193 143 -185Q143 -182 145 -170Q149 -154 152 -151T172 -148Q220 -148 230 -141Q238 -136 258 -53T279 32Q279 33 272 29Q224 -10 172 -10Q117 -10 75 30T33 157ZM352 326Q329 405 277 405Q242 405 210 374T160 293Q131 214 119 129Q119 126 119 118T118 106Q118 61 136 44T179 26Q233 26 290 98L298 109L352 326Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="msub"><g data-mml-node="mi"><use data-c="1D43D" xlink:href="#MJX-1-TEX-I-1D43D"></use></g><g data-mml-node="TeXAtom" transform="translate(588,-150) scale(0.707)" data-mjx-texclass="ORD"><g data-mml-node="mi"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g><g data-mml-node="mi" transform="translate(345,0)"><use data-c="1D457" xlink:href="#MJX-1-TEX-I-1D457"></use></g></g></g><g data-mml-node="mo" transform="translate(1451.1,0)"><use data-c="3D" xlink:href="#MJX-1-TEX-N-3D"></use></g><g data-mml-node="mfrac" transform="translate(2506.8,0)"><g data-mml-node="mrow" transform="translate(220,676)"><g data-mml-node="mi"><use data-c="1D715" xlink:href="#MJX-1-TEX-I-1D715"></use></g><g data-mml-node="msub" transform="translate(566,0)"><g data-mml-node="mi"><use data-c="1D465" xlink:href="#MJX-1-TEX-I-1D465"></use></g><g data-mml-node="mi" transform="translate(605,-150) scale(0.707)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g></g></g><g data-mml-node="mrow" transform="translate(259.3,-686)"><g data-mml-node="mi"><use data-c="1D715" xlink:href="#MJX-1-TEX-I-1D715"></use></g><g data-mml-node="msub" transform="translate(566,0)"><g data-mml-node="mi"><use data-c="1D45E" xlink:href="#MJX-1-TEX-I-1D45E"></use></g><g data-mml-node="mi" transform="translate(479,-150) scale(0.707)"><use data-c="1D457" xlink:href="#MJX-1-TEX-I-1D457"></use></g></g></g><rect width="1665" height="60" x="120" y="220"></rect></g></g></g></svg></mjx-container>。在离散时间步长中，这个关系可以近似为：</p>
+<div style="text-align:center;">
+<p><br /><span class="math display"><em>Δ</em><em>x</em> ≈ <em>J</em>(<em>q</em>)<em>Δ</em><em>q</em></span><br /></p>
+</div>
+<p>其中 $  $ 是末端执行器需要移动的微小位移（即当前位置与目标位置的误差向量），而 $  $ 是需要求解的关节角度增量。IK问题因此被转化为在每个迭代步中求解上述线性方程组中的 <span class="math inline"><em>Δ</em><em>q⃗</em></span>。</p>
+<h4 id="雅可比伪逆法">雅可比伪逆法</h4>
+<p>求解 $  $ 的最直接方法是对雅可比矩阵求逆：<span class="math inline"><em>Δ</em><em>q⃗</em> = <em>J</em><sup> − 1</sup><em>Δ</em><em>x⃗</em></span>。然而，雅可比矩阵通常不是方阵（对于冗余或欠驱动系统）或可能是奇异的。因此，实际应用中通常使用<strong>摩尔-彭若斯伪逆（Moore-Penrose Pseudoinverse）</strong>，记为 <span class="math inline"><em>J</em><sup>+</sup></span>。迭代更新的法则为： <span class="math inline"><em>Δ</em><em>q⃗</em> = <em>J</em><sup>+</sup><em>Δ</em><em>x⃗</em></span> 这个解的特性是，在所有能够满足 <span class="math inline"><em>J</em><em>Δ</em><em>q⃗</em> = <em>Δ</em><em>x⃗</em></span> 的 <span class="math inline"><em>Δ</em><em>q⃗</em></span> 中，它具有最小的欧几里得范数（<span class="math inline">||<em>Δ</em><em>q⃗</em>||</span>）。这意味着它倾向于产生最小的关节运动。</p>
+<p>然而，伪逆法的主要缺点是在接近奇异点时表现出极度的不稳定性。当 $ J $ 变得病态（ill-conditioned）时，<span class="math inline"><em>J</em><sup>+</sup></span> 的元素会变得非常大，导致计算出的 $  $ 异常巨大，从而引起关节速度的剧烈振荡和失控。</p>
+<h4 id="雅可比转置法">雅可比转置法</h4>
+<p>为了避免伪逆法高昂的计算成本（通常需要奇异值分解SVD）和不稳定性，雅可比转置法提供了一种更简单、更稳健的替代方案。其迭代更新法则为：</p>
+<div style="text-align:center;">
+<p><br /><span class="math display"><em>Δ</em><em>q</em> = <em>α</em><em>J</em><sup><em>T</em></sup><em>Δ</em><em>x</em></span><br /></p>
+</div>
+<p>其中 $ $ 是一个需要仔细调节的步长（学习率）。</p>
+<p>这种方法在计算上非常廉价，因为它只涉及矩阵转置和向量乘法。从优化的角度看，雅可比转置法等价于在误差平方和 $ ||_D - f()||^2 $ 上进行梯度下降。虽然它能保证向着正确的方向移动，但收敛速度可能较慢，并且对于多末端执行器等复杂问题，其表现可能不佳。</p>
+<h4 id="奇异点鲁棒解阻尼最小二乘法dls">奇异点鲁棒解：阻尼最小二乘法（DLS）</h4>
+<p>阻尼最小二乘法（Damped Least Squares, DLS），也被称为Levenberg-Marquardt算法，是目前应用最广泛的鲁棒IK求解器之一。它通过在伪逆的计算中引入一个阻尼项来解决奇异点问题。其更新法则为：</p>
+<p><span class="math inline"><em>Δ</em><em>q</em> = <em>J</em><sup><em>T</em></sup>(<em>J</em><em>J</em><sup><em>T</em></sup> + <em>λ</em><sup>2</sup><em>I</em>)<sup> − 1</sup><em>Δ</em><em>x</em></span></p>
+<p>其中 $ $ 是一个非负的<strong>阻尼因子</strong>， <span class="math inline"><em>I</em></span> 是单位矩阵。</p>
+<p>当机械臂远离奇异点时，<span class="math inline"><em>J</em><em>J</em><sup><em>T</em></sup></span> 是良态的，此时可以取一个很小的 <span class="math inline"><em>λ</em></span> （甚至为0），DLS的行为就接近于伪逆法，保证了求解的精度。当机械臂接近奇异点时， <span class="math inline"><em>J</em><em>J</em><sup><em>T</em></sup></span> 变得奇异，此时 <span class="math inline"><em>λ</em><sup>2</sup><em>I</em></span> 项起到了主导作用，它保证了要求逆的矩阵是可逆且良态的，从而避免了关节速度的无限增大。DLS在解的<strong>准确性</strong>和<strong>关节运动的平滑性</strong>之间提供了一个平滑的权衡：在奇异点附近，它会牺牲一些末端执行器的跟踪精度，以换取稳定、可行的关节速度。</p>
+<h3 id="启发式方法循环坐标下降法ccd">启发式方法：循环坐标下降法（CCD）</h3>
+<p>循环坐标下降法（Cyclic Coordinate Descent, CCD）算法流程如下：</p>
+<ol type="1">
+<li><p>从最末端的关节（离末端执行器最近的关节）开始，向基座方向循环遍历每一个关节。</p></li>
+<li><p>对于当前处理的关节 i，计算一个旋转量，使得该旋转能将末端执行器尽可能地对准目标点。这个计算通常是解析的，只需要简单的向量运算（例如，计算从当前关节到末端执行器的向量和从当前关节到目标的向量之间的夹角）。</p></li>
+<li><p>将计算出的旋转应用到关节 i，并更新整个链的构型。</p></li>
+<li><p>重复步骤2和3，直到遍历完所有关节。</p></li>
+<li><p>将整个过程（步骤1-4）重复迭代多次，直到末端执行器与目标的距离小于一个预设的阈值，或者达到最大迭代次数 。</p></li>
+</ol>
+<p>CCD的优点是每个迭代步的计算成本极低，且易于实现。然而，它也存在一些显著的缺点：由于其“贪心”的本质，它倾向于过度使用靠近末端执行器的关节，可能导致不自然的“Z”字形姿态。此外，其收敛速度可能很慢，尤其是在需要高精度时，末端执行器可能会以锯齿状路径缓慢接近目标。</p>
+<h3 id="ik作为约束优化问题">IK作为约束优化问题</h3>
+<p>将IK问题形式化为一个通用的<strong>约束优化问题</strong>，是现代IK技术中最强大和最灵活的框架。这种方法不再仅仅寻求一个满足几何约束的解，而是寻求一个在满足约束的同时，使某个代价函数（Cost Function）最小化的“最优”解。</p>
+<p>一个基本的IK优化问题可以表述为：</p>
+<mjx-container class="MathJax" jax="SVG" display="true"><svg style="vertical-align: -1.919ex;" xmlns="http://www.w3.org/2000/svg" width="28.795ex" height="4.955ex" role="img" focusable="false" viewBox="0 -1342 12727.4 2190.2" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-1-TEX-I-1D45A" d="M21 287Q22 293 24 303T36 341T56 388T88 425T132 442T175 435T205 417T221 395T229 376L231 369Q231 367 232 367L243 378Q303 442 384 442Q401 442 415 440T441 433T460 423T475 411T485 398T493 385T497 373T500 364T502 357L510 367Q573 442 659 442Q713 442 746 415T780 336Q780 285 742 178T704 50Q705 36 709 31T724 26Q752 26 776 56T815 138Q818 149 821 151T837 153Q857 153 857 145Q857 144 853 130Q845 101 831 73T785 17T716 -10Q669 -10 648 17T627 73Q627 92 663 193T700 345Q700 404 656 404H651Q565 404 506 303L499 291L466 157Q433 26 428 16Q415 -11 385 -11Q372 -11 364 -4T353 8T350 18Q350 29 384 161L420 307Q423 322 423 345Q423 404 379 404H374Q288 404 229 303L222 291L189 157Q156 26 151 16Q138 -11 108 -11Q95 -11 87 -5T76 7T74 17Q74 30 112 181Q151 335 151 342Q154 357 154 369Q154 405 129 405Q107 405 92 377T69 316T57 280Q55 278 41 278H27Q21 284 21 287Z"></path><path id="MJX-1-TEX-I-1D456" d="M184 600Q184 624 203 642T247 661Q265 661 277 649T290 619Q290 596 270 577T226 557Q211 557 198 567T184 600ZM21 287Q21 295 30 318T54 369T98 420T158 442Q197 442 223 419T250 357Q250 340 236 301T196 196T154 83Q149 61 149 51Q149 26 166 26Q175 26 185 29T208 43T235 78T260 137Q263 149 265 151T282 153Q302 153 302 143Q302 135 293 112T268 61T223 11T161 -11Q129 -11 102 10T74 74Q74 91 79 106T122 220Q160 321 166 341T173 380Q173 404 156 404H154Q124 404 99 371T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Z"></path><path id="MJX-1-TEX-I-1D45B" d="M21 287Q22 293 24 303T36 341T56 388T89 425T135 442Q171 442 195 424T225 390T231 369Q231 367 232 367L243 378Q304 442 382 442Q436 442 469 415T503 336T465 179T427 52Q427 26 444 26Q450 26 453 27Q482 32 505 65T540 145Q542 153 560 153Q580 153 580 145Q580 144 576 130Q568 101 554 73T508 17T439 -10Q392 -10 371 17T350 73Q350 92 386 193T423 345Q423 404 379 404H374Q288 404 229 303L222 291L189 157Q156 26 151 16Q138 -11 108 -11Q95 -11 87 -5T76 7T74 17Q74 30 112 180T152 343Q153 348 153 366Q153 405 129 405Q91 405 66 305Q60 285 60 284Q58 278 41 278H27Q21 284 21 287Z"></path><path id="MJX-1-TEX-I-1D45E" d="M33 157Q33 258 109 349T280 441Q340 441 372 389Q373 390 377 395T388 406T404 418Q438 442 450 442Q454 442 457 439T460 434Q460 425 391 149Q320 -135 320 -139Q320 -147 365 -148H390Q396 -156 396 -157T393 -175Q389 -188 383 -194H370Q339 -192 262 -192Q234 -192 211 -192T174 -192T157 -193Q143 -193 143 -185Q143 -182 145 -170Q149 -154 152 -151T172 -148Q220 -148 230 -141Q238 -136 258 -53T279 32Q279 33 272 29Q224 -10 172 -10Q117 -10 75 30T33 157ZM352 326Q329 405 277 405Q242 405 210 374T160 293Q131 214 119 129Q119 126 119 118T118 106Q118 61 136 44T179 26Q233 26 290 98L298 109L352 326Z"></path><path id="MJX-1-TEX-I-1D436" d="M50 252Q50 367 117 473T286 641T490 704Q580 704 633 653Q642 643 648 636T656 626L657 623Q660 623 684 649Q691 655 699 663T715 679T725 690L740 705H746Q760 705 760 698Q760 694 728 561Q692 422 692 421Q690 416 687 415T669 413H653Q647 419 647 422Q647 423 648 429T650 449T651 481Q651 552 619 605T510 659Q484 659 454 652T382 628T299 572T226 479Q194 422 175 346T156 222Q156 108 232 58Q280 24 350 24Q441 24 512 92T606 240Q610 253 612 255T628 257Q648 257 648 248Q648 243 647 239Q618 132 523 55T319 -22Q206 -22 128 53T50 252Z"></path><path id="MJX-1-TEX-N-28" d="M94 250Q94 319 104 381T127 488T164 576T202 643T244 695T277 729T302 750H315H319Q333 750 333 741Q333 738 316 720T275 667T226 581T184 443T167 250T184 58T225 -81T274 -167T316 -220T333 -241Q333 -250 318 -250H315H302L274 -226Q180 -141 137 -14T94 250Z"></path><path id="MJX-1-TEX-N-29" d="M60 749L64 750Q69 750 74 750H86L114 726Q208 641 251 514T294 250Q294 182 284 119T261 12T224 -76T186 -143T145 -194T113 -227T90 -246Q87 -249 86 -250H74Q66 -250 63 -250T58 -247T55 -238Q56 -237 66 -225Q221 -64 221 250T66 725Q56 737 55 738Q55 746 60 749Z"></path><path id="MJX-1-TEX-N-3D" d="M56 347Q56 360 70 367H707Q722 359 722 347Q722 336 708 328L390 327H72Q56 332 56 347ZM56 153Q56 168 72 173H708Q722 163 722 153Q722 140 707 133H70Q56 140 56 153Z"></path><path id="MJX-1-TEX-N-31" d="M213 578L200 573Q186 568 160 563T102 556H83V602H102Q149 604 189 617T245 641T273 663Q275 666 285 666Q294 666 302 660V361L303 61Q310 54 315 52T339 48T401 46H427V0H416Q395 3 257 3Q121 3 100 0H88V46H114Q136 46 152 46T177 47T193 50T201 52T207 57T213 61V578Z"></path><path id="MJX-1-TEX-N-32" d="M109 429Q82 429 66 447T50 491Q50 562 103 614T235 666Q326 666 387 610T449 465Q449 422 429 383T381 315T301 241Q265 210 201 149L142 93L218 92Q375 92 385 97Q392 99 409 186V189H449V186Q448 183 436 95T421 3V0H50V19V31Q50 38 56 46T86 81Q115 113 136 137Q145 147 170 174T204 211T233 244T261 278T284 308T305 340T320 369T333 401T340 431T343 464Q343 527 309 573T212 619Q179 619 154 602T119 569T109 550Q109 549 114 549Q132 549 151 535T170 489Q170 464 154 447T109 429Z"></path><path id="MJX-1-TEX-N-2223" d="M139 -249H137Q125 -249 119 -235V251L120 737Q130 750 139 750Q152 750 159 735V-235Q151 -249 141 -249H139Z"></path><path id="MJX-1-TEX-I-1D465" d="M52 289Q59 331 106 386T222 442Q257 442 286 424T329 379Q371 442 430 442Q467 442 494 420T522 361Q522 332 508 314T481 292T458 288Q439 288 427 299T415 328Q415 374 465 391Q454 404 425 404Q412 404 406 402Q368 386 350 336Q290 115 290 78Q290 50 306 38T341 26Q378 26 414 59T463 140Q466 150 469 151T485 153H489Q504 153 504 145Q504 144 502 134Q486 77 440 33T333 -11Q263 -11 227 52Q186 -10 133 -10H127Q78 -10 57 16T35 71Q35 103 54 123T99 143Q142 143 142 101Q142 81 130 66T107 46T94 41L91 40Q91 39 97 36T113 29T132 26Q168 26 194 71Q203 87 217 139T245 247T261 313Q266 340 266 352Q266 380 251 392T217 404Q177 404 142 372T93 290Q91 281 88 280T72 278H58Q52 284 52 289Z"></path><path id="MJX-1-TEX-I-1D437" d="M287 628Q287 635 230 637Q207 637 200 638T193 647Q193 655 197 667T204 682Q206 683 403 683Q570 682 590 682T630 676Q702 659 752 597T803 431Q803 275 696 151T444 3L430 1L236 0H125H72Q48 0 41 2T33 11Q33 13 36 25Q40 41 44 43T67 46Q94 46 127 49Q141 52 146 61Q149 65 218 339T287 628ZM703 469Q703 507 692 537T666 584T629 613T590 629T555 636Q553 636 541 636T512 636T479 637H436Q392 637 386 627Q384 623 313 339T242 52Q242 48 253 48T330 47Q335 47 349 47T373 46Q499 46 581 128Q617 164 640 212T683 339T703 469Z"></path><path id="MJX-1-TEX-N-2212" d="M84 237T84 250T98 270H679Q694 262 694 250T679 230H98Q84 237 84 250Z"></path><path id="MJX-1-TEX-I-1D453" d="M118 -162Q120 -162 124 -164T135 -167T147 -168Q160 -168 171 -155T187 -126Q197 -99 221 27T267 267T289 382V385H242Q195 385 192 387Q188 390 188 397L195 425Q197 430 203 430T250 431Q298 431 298 432Q298 434 307 482T319 540Q356 705 465 705Q502 703 526 683T550 630Q550 594 529 578T487 561Q443 561 443 603Q443 622 454 636T478 657L487 662Q471 668 457 668Q445 668 434 658T419 630Q412 601 403 552T387 469T380 433Q380 431 435 431Q480 431 487 430T498 424Q499 420 496 407T491 391Q489 386 482 386T428 385H372L349 263Q301 15 282 -47Q255 -132 212 -173Q175 -205 139 -205Q107 -205 81 -186T55 -132Q55 -95 76 -78T118 -61Q162 -61 162 -103Q162 -122 151 -136T127 -157L118 -162Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="munder"><g data-mml-node="mrow"><g data-mml-node="mi"><use data-c="1D45A" xlink:href="#MJX-1-TEX-I-1D45A"></use></g><g data-mml-node="mi" transform="translate(878,0)"><use data-c="1D456" xlink:href="#MJX-1-TEX-I-1D456"></use></g><g data-mml-node="mi" transform="translate(1223,0)"><use data-c="1D45B" xlink:href="#MJX-1-TEX-I-1D45B"></use></g></g><g data-mml-node="mi" transform="translate(748.9,-611) scale(0.707)"><use data-c="1D45E" xlink:href="#MJX-1-TEX-I-1D45E"></use></g></g><g data-mml-node="mi" transform="translate(1823,0)"><use data-c="1D436" xlink:href="#MJX-1-TEX-I-1D436"></use></g><g data-mml-node="mo" transform="translate(2583,0)"><use data-c="28" xlink:href="#MJX-1-TEX-N-28"></use></g><g data-mml-node="mi" transform="translate(2972,0)"><use data-c="1D45E" xlink:href="#MJX-1-TEX-I-1D45E"></use></g><g data-mml-node="mo" transform="translate(3432,0)"><use data-c="29" xlink:href="#MJX-1-TEX-N-29"></use></g><g data-mml-node="mo" transform="translate(4098.8,0)"><use data-c="3D" xlink:href="#MJX-1-TEX-N-3D"></use></g><g data-mml-node="mfrac" transform="translate(5154.6,0)"><g data-mml-node="mn" transform="translate(220,676)"><use data-c="31" xlink:href="#MJX-1-TEX-N-31"></use></g><g data-mml-node="mn" transform="translate(220,-686)"><use data-c="32" xlink:href="#MJX-1-TEX-N-32"></use></g><rect width="700" height="60" x="120" y="220"></rect></g><g data-mml-node="mo" transform="translate(6372.3,0)"><g data-mml-node="text"><use data-c="2223" xlink:href="#MJX-1-TEX-N-2223"></use></g><g data-mml-node="text" transform="translate(278,0)"><use data-c="2223" xlink:href="#MJX-1-TEX-N-2223"></use></g></g><g data-mml-node="msub" transform="translate(7206.1,0)"><g data-mml-node="mi"><use data-c="1D465" xlink:href="#MJX-1-TEX-I-1D465"></use></g><g data-mml-node="mi" transform="translate(605,-150) scale(0.707)"><use data-c="1D437" xlink:href="#MJX-1-TEX-I-1D437"></use></g></g><g data-mml-node="mo" transform="translate(8668.8,0)"><use data-c="2212" xlink:href="#MJX-1-TEX-N-2212"></use></g><g data-mml-node="mi" transform="translate(9669,0)"><use data-c="1D453" xlink:href="#MJX-1-TEX-I-1D453"></use></g><g data-mml-node="mo" transform="translate(10219,0)"><use data-c="28" xlink:href="#MJX-1-TEX-N-28"></use></g><g data-mml-node="mi" transform="translate(10608,0)"><use data-c="1D45E" xlink:href="#MJX-1-TEX-I-1D45E"></use></g><g data-mml-node="mo" transform="translate(11068,0)"><use data-c="29" xlink:href="#MJX-1-TEX-N-29"></use></g><g data-mml-node="mo" transform="translate(11734.8,0)"><use data-c="2223" xlink:href="#MJX-1-TEX-N-2223"></use></g><g data-mml-node="msup" transform="translate(12012.8,0)"><g data-mml-node="mo"><use data-c="2223" xlink:href="#MJX-1-TEX-N-2223"></use></g><g data-mml-node="mn" transform="translate(311,413) scale(0.707)"><use data-c="32" xlink:href="#MJX-1-TEX-N-32"></use></g></g></g></g></svg></mjx-container>
+<p>这个代价函数度量了当前末端执行器位置与目标位置之间的欧氏距离平方。可以使用标准的非线性优化算法，如<strong>梯度下降法</strong>或<strong>牛顿法</strong>，来迭代地更新 <span class="math inline"><em>q⃗</em></span> 以最小化 <span class="math inline"><em>C</em>(<em>q⃗</em>)</span>。</p>
+<p>可以通过在代价函数中添加额外的惩罚项来引入各种复杂的约束和期望的行为。例如，一个更全面的代价函数可能如下所示:</p>
+<div style="text-align:center;">
+<p><br /><span class="math display"><em>C</em>(<em>q⃗</em>) = <em>w</em><sub><em>t</em><em>a</em><em>s</em><em>k</em></sub>||<em>x⃗</em><em>D</em> − <em>f</em>(<em>q⃗</em>)||<sup>2</sup> + <em>w</em><sub><em>l</em><em>i</em><em>m</em><em>i</em><em>t</em><em>s</em></sub><em>C</em><sub><em>l</em><em>i</em><em>m</em><em>i</em><em>t</em><em>s</em></sub>(<em>q⃗</em>) + <em>w</em><sub><em>p</em><em>o</em><em>s</em><em>e</em></sub>||<em>q⃗</em> − <em>q⃗</em><em>r</em><em>e</em><em>f</em>||<sup>2</sup> + <em>w</em><sub><em>b</em><em>a</em><em>l</em><em>a</em><em>n</em><em>c</em><em>e</em></sub><em>C</em><sub><em>b</em><em>a</em><em>l</em><em>a</em><em>n</em><em>c</em><em>e</em></sub>(<em>q⃗</em>)</span><br /></p>
+</div>
+<p>其中：</p>
+<ul>
+<li><p><span class="math inline"><em>w</em></span> 是各项的权重，用于调节不同目标之间的优先级。</p></li>
+<li><p><span class="math inline"><em>C</em><sub><em>l</em><em>i</em><em>m</em><em>i</em><em>t</em><em>s</em></sub>(<em>q⃗</em>)</span> 是一个当关节接近其运动极限时会急剧增大的惩罚项。</p></li>
+<li><p><span class="math inline">||<em>q⃗</em> − <em>q⃗</em><sub><em>r</em><em>e</em><em>f</em></sub>||<sup>2</sup></span>惩罚当前姿态<span class="math inline"><em>q⃗</em></span>与一个参考姿态<span class="math inline"><em>q⃗</em><sub><em>r</em><em>e</em><em>f</em></sub></span> 的偏差。这在运动重定向中至关重要，可以用来保持源动作的风格。</p></li>
+<li><p><span class="math inline"><em>C</em><sub><em>b</em><em>a</em><em>l</em><em>a</em><em>n</em><em>c</em><em>e</em></sub>(<em>q⃗</em>)</span> 是一个与机器人质心（Center of Mass, CoM）位置相关的项，用于确保双足机器人或角色的平衡。</p></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Inverse Kinematics</div>
+      <div>https://runhanc.github.io/2025/08/22/IK/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Runhan Zhang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>August 22, 2025</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/08/14/IL/" title="Imitation Learning">
+                        <span class="hidden-mobile">Imitation Learning</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
